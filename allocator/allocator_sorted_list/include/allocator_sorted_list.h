@@ -14,12 +14,105 @@ class allocator_sorted_list final:
 {
 
 private:
-    
+
     void *_trusted_memory;
 
     static constexpr const size_t allocator_metadata_size = sizeof(std::pmr::memory_resource *) + sizeof(fit_mode) + sizeof(size_t) + sizeof(std::mutex) + sizeof(void*);
 
     static constexpr const size_t block_metadata_size = sizeof(void*) + sizeof(size_t);
+
+//region Helpers
+    /**
+     *
+     * @param trusted pointer to trusted memory
+     * @return pointer to parent allocator field
+     */
+    static inline std::pmr::memory_resource** parent_allocator(void* trusted) noexcept;
+
+    /**
+     *
+     * @param trusted pointer to trusted memory
+     * @return pointer to fit_mode field
+     */
+    static inline fit_mode* fit_mode(void* trusted) noexcept;
+
+    /**
+     *
+     * @param b_m pointer to current free block metadata
+     * @return pointer to next free block
+     */
+    static inline void** forward(void* b_m) noexcept;
+
+    /**
+     *
+     * @param b_m pointer to occupied block metadata
+     * @return pointer to _trusted_memory parent of block
+     */
+    static inline void** parent(void* b_m) noexcept;
+
+    /**
+     *
+     * @param trusted pointer to start of metadata
+     * @return pointer to size field
+     */
+    static inline size_t* space_size(void* trusted) noexcept;
+
+    /**
+     *
+     * @param trusted pointer to trusted memory
+     * @return pointer to field with mutex
+     */
+    static std::mutex* mtx(void* trusted) noexcept;
+
+    /**
+     *
+     * @param b_m pointer to block metadata
+     * @return block size
+     */
+    static inline size_t* block_size(void* b_m) noexcept;
+
+    /**
+     *
+     * @return pointer to field with first free block
+     */
+    static inline void** free_first_block(void* trusted) noexcept;
+
+    /**
+     *
+     * @return pointer to first block
+     */
+    static inline void* first_block(void* trusted) noexcept;
+
+    /**
+     *
+     * @param block pointer to block data
+     * @return pointer to block start
+     */
+    static void* block_metadata(void* block) noexcept;
+
+    /**
+     *
+     * @param b_m pointer to block metadata
+     * @return pointer to block end
+     */
+    static std::byte* block_end(void* b_m) noexcept;
+
+    /**
+     *
+     * @param b_m pointer to block metadata
+     * @return pointer to block data
+     */
+    static inline void* block_data(void* b_m) noexcept;
+
+    /**
+     *
+     * @param ptr pointer to data that need to be rebased
+     * @param old_trusted old _trusted_memory with data
+     * @param new_trusted new _trusted_memory
+     * @return pointer to new place of data
+     */
+    static inline void* rebase(void* ptr, void* old_trusted, void* new_trusted) noexcept;
+//endregion
 
 public:
 
