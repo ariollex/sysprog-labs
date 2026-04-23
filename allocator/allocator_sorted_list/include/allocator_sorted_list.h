@@ -103,15 +103,6 @@ private:
      * @return pointer to block data
      */
     static inline void* block_data(void* b_m) noexcept;
-
-    /**
-     *
-     * @param ptr pointer to data that need to be rebased
-     * @param old_trusted old _trusted_memory with data
-     * @param new_trusted new _trusted_memory
-     * @return pointer to new place of data
-     */
-    static inline void* rebase(void* ptr, void* old_trusted, void* new_trusted) noexcept;
 //endregion
 
 public:
@@ -122,10 +113,10 @@ public:
             allocator_with_fit_mode::fit_mode allocate_fit_mode = allocator_with_fit_mode::fit_mode::first_fit);
     
     allocator_sorted_list(
-        allocator_sorted_list const &other);
+        allocator_sorted_list const &other) = delete;
     
     allocator_sorted_list &operator=(
-        allocator_sorted_list const &other);
+        allocator_sorted_list const &other) = delete;
 
     allocator_sorted_list(
         allocator_sorted_list &&other) noexcept;

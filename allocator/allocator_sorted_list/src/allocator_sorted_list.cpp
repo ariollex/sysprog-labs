@@ -58,11 +58,6 @@ inline std::byte* allocator_sorted_list::block_end(void* b_m) noexcept {
 inline void* allocator_sorted_list::block_data(void* b_m) noexcept {
     return reinterpret_cast<std::byte*>(b_m) + block_metadata_size;
 }
-
-inline void* allocator_sorted_list::rebase(void* ptr, void* old_trusted, void* new_trusted) noexcept {
-    if (!ptr) return nullptr; // for end()
-    return reinterpret_cast<std::byte*>(new_trusted) + (reinterpret_cast<std::byte*>(ptr) - reinterpret_cast<std::byte*>(old_trusted));
-}
 //endregion
 
 allocator_sorted_list::~allocator_sorted_list()
@@ -170,36 +165,6 @@ allocator_sorted_list::allocator_sorted_list(
     *parent(best_current) = _trusted_memory;
 
     return block_data(best_current);
-}
-
-allocator_sorted_list::allocator_sorted_list(const allocator_sorted_list &other)
-{
-    if (!other._trusted_memory) {
-        _trusted_memory = nullptr;
-        return;
-    }
-
-    const auto t_s = *space_size(other._trusted_memory) + allocator_metadata_size;
-    _trusted_memory = (*parent_allocator(other._trusted_memory))->allocate(t_s);
-
-    std::memcpy(_trusted_memory, other._trusted_memory, t_s);
-
-    new (mtx(_trusted_memory)) std::mutex();
-
-    *free_first_block(_trusted_memory) = rebase(*free_first_block(other._trusted_memory), other._trusted_memory, _trusted_memory);
-
-    for (auto it = other.begin(); it != other.end(); ++it) {
-        void* new_block = rebase(*it, other._trusted_memory, _trusted_memory);
-        *parent(new_block) = rebase(*forward(*it),other._trusted_memory,_trusted_memory);
-    }
-}
-
-allocator_sorted_list &allocator_sorted_list::operator=(const allocator_sorted_list &other)
-{
-    if (do_is_equal(other)) return *this;
-    allocator_sorted_list tmp(other);
-    std::swap(_trusted_memory, tmp._trusted_memory);
-    return *this;
 }
 
 bool allocator_sorted_list::do_is_equal(const std::pmr::memory_resource &other) const noexcept
