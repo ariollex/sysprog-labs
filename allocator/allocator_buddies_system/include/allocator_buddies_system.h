@@ -46,17 +46,104 @@ private:
 
     void *_trusted_memory;
 
-    /**
-     * TODO: You must improve it for alignment support
-     */
+    static constexpr const size_t allocator_metadata_size =
+        (sizeof(allocator_dbg_helper*) + sizeof(fit_mode)+ sizeof(unsigned char) +
+            alignof(std::mutex) - 1) / alignof(std::mutex) * alignof(std::mutex)
+        + sizeof(std::mutex);
 
-    static constexpr const size_t allocator_metadata_size = sizeof(allocator_dbg_helper*) + sizeof(fit_mode) + sizeof(unsigned char) + sizeof(std::mutex);
-
-    static constexpr const size_t occupied_block_metadata_size = sizeof(block_metadata) + sizeof(void*);
+    static constexpr const size_t occupied_block_metadata_size =
+        (sizeof(block_metadata) + alignof(void*) - 1) / alignof(void*) * alignof(void*)
+        + sizeof(void*);
 
     static constexpr const size_t free_block_metadata_size = sizeof(block_metadata);
 
     static constexpr const size_t min_k = __detail::nearest_greater_k_of_2(occupied_block_metadata_size);
+
+//region Helpers
+    /**
+     *
+     * @param trusted pointer to trusted memory
+     * @return k - coefficient for size
+     */
+    static inline unsigned char* k(void* trusted) noexcept;
+
+    /**
+     *
+     * @param trusted pointer to trusted memory
+     * @return pointer to parent allocator field
+     */
+    static inline memory_resource** parent_allocator(void* trusted) noexcept;
+
+    /**
+     *
+     * @param b_m pointer to current block metadata
+     * @return pointer to next block
+     */
+    static inline void* forward(void* b_m) noexcept;
+
+    /**
+     *
+     * @param trusted pointer to trusted memory
+     * @return pointer to fit_mode field
+     */
+    static inline fit_mode* fit_mode(void* trusted) noexcept;
+
+    /**
+     *
+     * @param trusted pointer to start of metadata
+     * @return pointer to size field
+     */
+    static inline size_t space_size(void* trusted) noexcept;
+
+    /**
+     *
+     * @param trusted pointer to trusted memory
+     * @return pointer to field with mutex
+     */
+    static std::mutex* mtx(void* trusted) noexcept;
+
+    /**
+     *
+     * @param b_m pointer to block metadata
+     * @return block size
+     */
+    static inline size_t block_size(void* b_m) noexcept;
+
+    /**
+     *
+     * @param b_m pointer to memory
+     * @return pointer to block data
+     */
+    static void* block_data(void* b_m) noexcept;
+
+    /**
+     *
+     * @param trusted pointer to trusted memory
+     * @return pointer to first block metadata
+     */
+    static inline void* first_block(void* trusted) noexcept;
+
+    /**
+     *
+     * @param b_m pointer to occupied block metadata
+     * @return pointer to trusted memory parent of block
+     */
+    static inline void** parent(void* b_m) noexcept;
+
+    /**
+     *
+     * @param trusted pointer to trusted memory
+     * @return pointer to end of trusted memory
+     */
+    static inline void* trusted_end(void* trusted) noexcept;
+
+    /**
+     *
+     * @param b_m pointer to block metadata
+     * @return pointer to block buddy
+     */
+    inline void* buddy(void* b_m) const noexcept;
+//endregion
 
 public:
 
@@ -66,10 +153,10 @@ public:
             allocator_with_fit_mode::fit_mode allocate_fit_mode = allocator_with_fit_mode::fit_mode::first_fit);
 
     allocator_buddies_system(
-        allocator_buddies_system const &other);
+        allocator_buddies_system const &other) = delete;
     
     allocator_buddies_system &operator=(
-        allocator_buddies_system const &other);
+        allocator_buddies_system const &other) = delete;
     
     allocator_buddies_system(
         allocator_buddies_system &&other) noexcept;
