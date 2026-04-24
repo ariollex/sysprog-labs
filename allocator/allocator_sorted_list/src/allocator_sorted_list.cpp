@@ -115,8 +115,6 @@ allocator_sorted_list::allocator_sorted_list(
 {
     std::lock_guard lock(*mtx(_trusted_memory));
 
-    size = std::max(sizeof(void*), size);
-
     void* prev = nullptr;
 
     void* best_prev = nullptr;
