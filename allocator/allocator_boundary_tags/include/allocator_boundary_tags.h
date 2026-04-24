@@ -24,13 +24,113 @@ private:
 
     void *_trusted_memory;
 
+//region Helpers
+    /**
+     *
+     * @param trusted pointer to trusted memory
+     * @return pointer to parent allocator field
+     */
+    static inline memory_resource** parent_allocator(void* trusted) noexcept;
+
+    /**
+     *
+     * @param trusted pointer to trusted memory
+     * @return pointer to fit_mode field
+     */
+    static inline allocator_with_fit_mode::fit_mode* fit_mode(void* trusted) noexcept;
+
+    /**
+     *
+     * @param b_m pointer to current block metadata
+     * @return pointer to next block
+     */
+    static inline void** forward(void* b_m) noexcept;
+
+    /**
+     *
+     * @param b_m pointer to block
+     * @return pointer to prev block
+     */
+    static inline void** back(void* b_m) noexcept;
+
+    /**
+     *
+     * @param trusted pointer to start of metadata
+     * @return pointer to size field
+     */
+    static inline size_t* space_size(void* trusted) noexcept;
+
+    /**
+     *
+     * @param trusted pointer to trusted memory
+     * @return pointer to field with mutex
+     */
+    static std::mutex* mtx(void* trusted) noexcept;
+
+    /**
+     *
+     * @param b_m pointer to block metadata
+     * @return block size
+     */
+    static inline size_t* block_size(void* b_m) noexcept;
+
+    /**
+     *
+     * @param trusted pointer to trusted memory
+     * @return pointer to first occupied field
+     */
+    static inline void** first_occupied(void* trusted) noexcept;
+
+    /**
+     *
+     * @param block pointer to block data
+     * @return pointer to block start
+     */
+    static inline void* block_metadata(void* block) noexcept;
+
+    /**
+     *
+     * @param b_m pointer to block metadata
+     * @return pointer to block end
+     */
+    static inline std::byte* block_end(void* b_m) noexcept;
+
+    /**
+     *
+     * @param b_m pointer to memory
+     * @return pointer to block data
+     */
+    static void* block_data(void* b_m) noexcept;
+
+    /**
+     *
+     * @param trusted pointer to trusted memory
+     * @return pointer to first block metadata
+     */
+    static inline void* first_block(void* trusted) noexcept;
+
+    /**
+     *
+     * @param trusted pointer to trusted memory
+     * @return pointer to end of trusted memory
+     */
+    static inline void* trusted_end(void* trusted) noexcept;
+
+    /**
+     *
+     * @param b_m pointer to occupied block metadata
+     * @return pointer to trusted memory parent of block
+     */
+    static inline void** parent(void* b_m) noexcept;
+//endregion
+
 public:
     
     ~allocator_boundary_tags() override;
     
-    allocator_boundary_tags(allocator_boundary_tags const &other);
+    allocator_boundary_tags(allocator_boundary_tags const &other) = delete;
     
-    allocator_boundary_tags &operator=(allocator_boundary_tags const &other);
+    allocator_boundary_tags &operator=(allocator_boundary_tags const &other) = delete;
     
     allocator_boundary_tags(
         allocator_boundary_tags &&other) noexcept;
