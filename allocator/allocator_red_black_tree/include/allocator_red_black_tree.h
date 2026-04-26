@@ -29,15 +29,160 @@ private:
     static constexpr const size_t occupied_block_metadata_size = sizeof(block_data) + 3 * sizeof(void*);
     static constexpr const size_t free_block_metadata_size = sizeof(block_data) + 5 * sizeof(void*);
 
+// region helpers declaration
+    /**
+     *
+     * @param trusted pointer to trusted memory
+     * @return pointer to parent allocator field
+     */
+    static inline memory_resource** parent_allocator(void* trusted) noexcept;
+
+    /**
+     *
+     * @param trusted pointer to trusted memory
+     * @return pointer to fit_mode field
+     */
+    static inline fit_mode* fit_mode(void* trusted) noexcept;
+
+
+    /**
+     *
+     * @param trusted pointer to trusted memory
+     * @return pointer to root of Red-Black Tree
+     */
+    static inline std::byte** root(void* trusted) noexcept;
+
+    /**
+     *
+     * @param b_m pointer to current block metadata
+     * @return pointer to next block
+     */
+    static inline std::byte** next(void* b_m) noexcept;
+
+    /**
+     *
+     * @param b_m pointer to block metadata
+     * @return pointer to prev block
+     */
+    static inline std::byte** prev(void* b_m) noexcept;
+
+    /**
+     *
+     * @param b_m pointer to block metadata
+     * @return pointer to left node
+     */
+    static inline std::byte** left(void* b_m) noexcept;
+
+    /**
+     *
+     * @param b_m pointer to block metadata
+     * @return pointer to right node
+     */
+    static inline std::byte** right(void* b_m) noexcept;
+
+    /**
+     *
+     * @param trusted pointer to start of metadata
+     * @return pointer to size field
+     */
+    static inline size_t* space_size(void* trusted) noexcept;
+
+    /**
+     *
+     * @param trusted pointer to trusted memory
+     * @return pointer to field with mutex
+     */
+    static std::mutex* mtx(void* trusted) noexcept;
+
+    /**
+     *
+     * @param trusted pointer to trusted memory
+     * @param b_m pointer to block metadata
+     * @return block size
+     */
+    static inline size_t block_size(void* trusted, void* b_m) noexcept;
+
+    /**
+     *
+     * @param b_m pointer to block metadata
+     * @return pointer to block data struct
+     */
+    static inline block_data* block_node(void* b_m) noexcept;
+
+    /**
+     *
+     * @param block pointer to block data
+     * @return pointer to block start
+     */
+    static inline std::byte* block_metadata(void* block) noexcept;
+
+    /**
+     *
+     * @param b_m pointer to block metadata
+     * @return size of block metadata
+     */
+    static inline size_t block_metadata_size(void* b_m) noexcept;
+
+    /**
+     *
+     * @param trusted pointer to trusted memory
+     * @return pointer to first block metadata
+     */
+    static inline std::byte* first_block(void* trusted) noexcept;
+
+    /**
+     *
+     * @param trusted pointer to trusted memory
+     * @return pointer to end of trusted memory
+     */
+    static inline std::byte* trusted_end(void* trusted) noexcept;
+
+    /**
+     *
+     * @param b_m pointer to occupied block metadata
+     * @return pointer to trusted memory parent of block if block occupied or pointer to node parent if block is free
+     */
+    static inline void** parent(void* b_m) noexcept;
+// endregion helpers declaration
+
+// region red-black tree declaration
+    static inline bool is_red(void* node) noexcept;
+
+    static inline bool is_black(void* node) noexcept;
+
+    static bool is_left_child(void *node) noexcept;
+
+    static bool is_right_child(void *node) noexcept;
+
+    static std::byte *maximum(void *node) noexcept;
+
+    char compare(void *u, void *v) const noexcept;
+
+    void transplant(void* u, void* v) const noexcept;
+
+    void rotate_right(void *y) const noexcept;
+
+    void rotate_left(void *x) const noexcept;
+
+    void rotate_big_right(void *y) const noexcept;
+
+    void rotate_big_left(void *x) const noexcept;
+
+    void swap_with_predecessor(void *node) const noexcept;
+
+    void insert(void *new_node) const;
+
+    void remove(void* node) const;
+// endregion region red-black tree declaration
 public:
     
     ~allocator_red_black_tree() override;
     
     allocator_red_black_tree(
-        allocator_red_black_tree const &other);
+        allocator_red_black_tree const &other) = delete;
     
     allocator_red_black_tree &operator=(
-        allocator_red_black_tree const &other);
+        allocator_red_black_tree const &other) = delete;
     
     allocator_red_black_tree(
         allocator_red_black_tree &&other) noexcept;
