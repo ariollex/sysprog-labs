@@ -402,9 +402,12 @@ allocator_red_black_tree::~allocator_red_black_tree()
 }
 
 allocator_red_black_tree::allocator_red_black_tree(
-    allocator_red_black_tree &&other) noexcept: _trusted_memory(other._trusted_memory)
+allocator_red_black_tree &&other) noexcept: _trusted_memory(nullptr)
 {
-    other._trusted_memory = nullptr;
+    if (!other._trusted_memory) return;
+
+    std::lock_guard lock(*mtx(other._trusted_memory));
+    _trusted_memory = std::exchange(other._trusted_memory, nullptr);
 }
 
 allocator_red_black_tree &allocator_red_black_tree::operator=(
