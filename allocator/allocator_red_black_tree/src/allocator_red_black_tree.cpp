@@ -464,10 +464,11 @@ bool allocator_red_black_tree::do_is_equal(const std::pmr::memory_resource &othe
     void *best_current = nullptr;
     const auto mode = *fit_mode(_trusted_memory);
     auto current = *root(_trusted_memory);
+    const size_t t_s = size + occupied_block_metadata_size;
 
     if (mode == fit_mode::first_fit) {
         while (current) {
-            if (block_size(_trusted_memory, current) >= size + occupied_block_metadata_size) {
+            if (block_size(_trusted_memory, current) >= t_s) {
                 best_current = current;
                 break;
             }
@@ -475,8 +476,7 @@ bool allocator_red_black_tree::do_is_equal(const std::pmr::memory_resource &othe
         }
     } else if (mode == fit_mode::the_best_fit) {
         while (current) {
-            const auto current_size = block_size(_trusted_memory, current);
-            if (current_size >= size + occupied_block_metadata_size) {
+            if (block_size(_trusted_memory, current) >= t_s) {
                 best_current = current;
                 current = *left(current);
             } else {
@@ -486,7 +486,7 @@ bool allocator_red_black_tree::do_is_equal(const std::pmr::memory_resource &othe
     } else if (mode == fit_mode::the_worst_fit) {
         if (current) {
             current = maximum(current);
-            if (block_size(_trusted_memory, current) >= size + occupied_block_metadata_size) {
+            if (block_size(_trusted_memory, current) >= t_s) {
                 best_current = current;
             }
         }
@@ -496,8 +496,8 @@ bool allocator_red_black_tree::do_is_equal(const std::pmr::memory_resource &othe
 
     remove(best_current);
 
-    if (block_size(_trusted_memory, best_current) >= size + occupied_block_metadata_size + free_block_metadata_size) {
-        const auto rest_block = reinterpret_cast<std::byte*>(best_current) + size + occupied_block_metadata_size;
+    if (block_size(_trusted_memory, best_current) >= t_s + free_block_metadata_size) {
+        const auto rest_block = reinterpret_cast<std::byte*>(best_current) + t_s;
 
         *prev(rest_block) = reinterpret_cast<std::byte*>(best_current);
         *next(rest_block) = *next(best_current);
