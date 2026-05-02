@@ -77,10 +77,12 @@ allocator_boundary_tags::~allocator_boundary_tags()
 }
 
 allocator_boundary_tags::allocator_boundary_tags(
-    allocator_boundary_tags &&other) noexcept
+    allocator_boundary_tags &&other) noexcept: _trusted_memory(nullptr)
 {
-    _trusted_memory = other._trusted_memory;
-    other._trusted_memory = nullptr;
+    if (other._trusted_memory) {
+        std::lock_guard lock(*mtx(other._trusted_memory));
+        _trusted_memory = std::exchange(other._trusted_memory, nullptr);
+    }
 }
 
 allocator_boundary_tags &allocator_boundary_tags::operator=(
