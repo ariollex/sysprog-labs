@@ -173,20 +173,40 @@ void allocator_red_black_tree::rotate_big_right(void *y) const noexcept {
 
 void allocator_red_black_tree::swap_with_predecessor(void *node) const noexcept {
     const auto r = maximum(*left(node));
+    if (node == r) return;
+
     const auto node_l = *left(node);
     const auto node_r = *right(node);
+    const auto node_color = block_node(node)->color;
 
-    if (*parent(r) != node) {
-        transplant(r, *left(r));
+    const auto r_p = *parent(r);
+    const auto r_l = *left(r);
+    const auto r_color = block_node(r)->color;
+
+    const bool r_was_left = r_p && *left(r_p) == r;
+
+    if (r_p == node) {
+        transplant(node, r);
+        *right(r) = reinterpret_cast<std::byte*>(node);
+        *parent(node) = r;
+        *left(node) = nullptr;
+    } else {
+        transplant(r, r_l);
+        transplant(node, r);
         *left(r) = node_l;
         if (node_l) *parent(node_l) = r;
+        *right(r) = node_r;
+        if (node_r) *parent(node_r) = r;
+
+        r_was_left ? *left(r_p) = reinterpret_cast<std::byte*>(node) : *right(r_p) = reinterpret_cast<std::byte*>(node);
+        *parent(node) = reinterpret_cast<std::byte*>(r_p);
+        *left(node) = r_l;
+        if (r_l) *parent(r_l) = reinterpret_cast<std::byte*>(node);
+        *right(node) = nullptr;
     }
 
-    transplant(node, r);
-    *right(r) = node_r;
-    if (node_r) *parent(node_r) = r;
-
-    block_node(r)->color = block_node(node)->color;
+    block_node(node)->color = r_color;
+    block_node(r)->color = node_color;
 }
 
 void allocator_red_black_tree::insert(void *new_node) const {
@@ -290,7 +310,6 @@ void allocator_red_black_tree::remove(void* node) const {
                 throw std::logic_error("Invalid red-black tree");
             } else {
                 swap_with_predecessor(node);
-                return;
             }
         } else {
             if (*left(node) == nullptr && *right(node) == nullptr) {
@@ -368,7 +387,6 @@ void allocator_red_black_tree::remove(void* node) const {
                 return;
             } else {
                 swap_with_predecessor(node);
-                return;
             }
         }
     }
