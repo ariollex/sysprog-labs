@@ -548,6 +548,7 @@ void allocator_red_black_tree::do_deallocate_sm(
 
 void allocator_red_black_tree::set_fit_mode(allocator_with_fit_mode::fit_mode mode)
 {
+    std::lock_guard lock(*mtx(_trusted_memory));
     *fit_mode(_trusted_memory) = mode;
 }
 
