@@ -65,10 +65,12 @@ allocator_buddies_system::~allocator_buddies_system()
 }
 
 allocator_buddies_system::allocator_buddies_system(
-    allocator_buddies_system &&other) noexcept
+    allocator_buddies_system &&other) noexcept: _trusted_memory(nullptr)
 {
-    _trusted_memory = other._trusted_memory;
-    other._trusted_memory = nullptr;
+    if (other._trusted_memory) {
+        std::lock_guard lock(*mtx(other._trusted_memory));
+        _trusted_memory = std::exchange(other._trusted_memory, nullptr);
+    }
 }
 
 allocator_buddies_system &allocator_buddies_system::operator=(
