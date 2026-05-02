@@ -416,12 +416,16 @@ allocator_red_black_tree &allocator_red_black_tree::operator=(
     if (do_is_equal(other)) return *this;
 
     if (_trusted_memory) {
-        mtx(_trusted_memory)->~mutex(); // because mutex in _trusted_memory
+        mtx(_trusted_memory)->~mutex();
         (*parent_allocator(_trusted_memory))->deallocate(_trusted_memory,
         *space_size(_trusted_memory) + allocator_metadata_size);
+        _trusted_memory = nullptr;
     }
-    _trusted_memory = other._trusted_memory;
-    other._trusted_memory = nullptr;
+
+    if (other._trusted_memory) {
+        std::lock_guard lock(*mtx(other._trusted_memory));
+        _trusted_memory = std::exchange(other._trusted_memory, nullptr);
+    }
 
     return *this;
 }
